@@ -1,38 +1,55 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>School SaaS Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <style>
     body{
-      font-family: Arial;
+      font-family: Arial, sans-serif;
       background:#f4f6f9;
       padding:20px;
     }
     .box{
-      max-width:400px;
+      max-width:420px;
       margin:auto;
-      background:#fff;
+      background:#ffffff;
       padding:20px;
-      border-radius:6px;
+      border-radius:8px;
+      box-shadow:0 0 10px rgba(0,0,0,0.1);
+    }
+    h3{
+      text-align:center;
     }
     input,button{
       width:100%;
       padding:10px;
       margin-top:10px;
+      font-size:16px;
     }
     button{
       background:#0b5ed7;
       color:#fff;
       border:none;
+      border-radius:4px;
+    }
+    button:hover{
+      background:#084298;
     }
     #dashboard{
       display:none;
+    }
+    #msg{
+      color:red;
+      text-align:center;
+      margin-top:10px;
     }
   </style>
 </head>
 <body>
 
+<!-- LOGIN BOX -->
 <div class="box" id="loginBox">
   <h3>School Login</h3>
   <input type="email" id="email" placeholder="Email">
@@ -41,48 +58,58 @@
   <p id="msg"></p>
 </div>
 
+<!-- DASHBOARD -->
 <div class="box" id="dashboard">
   <h3>Dashboard</h3>
-  <p id="status"></p>
+  <p id="status">Checking...</p>
   <button onclick="logout()">Logout</button>
 </div>
 
-<!-- Firebase -->
+<!-- Firebase CDN -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-  // 🔴 APNA FIREBASE CONFIG YAHA PASTE KARO
+  // 🔥 FIREBASE CONFIG (ALREADY SET – NO CHANGE NEEDED)
   firebase.initializeApp({
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID"
+    apiKey: "AIzaSyA6zbRTjmD5dj8sOBVNv_a7RV0ZtvD9L8Y",
+    authDomain: "school-sass-e8333.firebaseapp.com",
+    projectId: "school-sass-e8333"
   });
 
   const auth = firebase.auth();
   const db = firebase.firestore();
 
+  // LOGIN FUNCTION
   function login(){
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
-    auth.signInWithEmailAndPassword(email,password)
-    .catch(err=>{
-      document.getElementById("msg").innerText = err.message;
-    });
+    document.getElementById("msg").innerText = "";
+
+    auth.signInWithEmailAndPassword(email, password)
+      .catch(err=>{
+        document.getElementById("msg").innerText = err.message;
+      });
   }
 
+  // AUTH STATE CHECK
   auth.onAuthStateChanged(user=>{
-    if(!user) return;
+    if(!user){
+      document.getElementById("loginBox").style.display="block";
+      document.getElementById("dashboard").style.display="none";
+      return;
+    }
 
     document.getElementById("loginBox").style.display="none";
     document.getElementById("dashboard").style.display="block";
 
+    // USER DATA FROM FIRESTORE
     db.collection("users").doc(user.uid).get().then(doc=>{
       if(!doc.exists){
         document.getElementById("status").innerText =
-          "No user record found";
+          "❌ User record not found in database";
         return;
       }
 
@@ -95,14 +122,16 @@
           "❌ Trial Expired – Please Renew";
       }else{
         document.getElementById("status").innerText =
-          "✅ Welcome (" + data.role + ") Trial Active";
+          "✅ Welcome (" + data.role + ") | Trial Active";
       }
     });
   });
 
+  // LOGOUT
   function logout(){
-    auth.signOut();
-    location.reload();
+    auth.signOut().then(()=>{
+      location.reload();
+    });
   }
 </script>
 
