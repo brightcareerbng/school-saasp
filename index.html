@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>School SaaS Login</title>
+  <style>
+    body{
+      font-family: Arial;
+      background:#f4f6f9;
+      padding:20px;
+    }
+    .box{
+      max-width:400px;
+      margin:auto;
+      background:#fff;
+      padding:20px;
+      border-radius:6px;
+    }
+    input,button{
+      width:100%;
+      padding:10px;
+      margin-top:10px;
+    }
+    button{
+      background:#0b5ed7;
+      color:#fff;
+      border:none;
+    }
+    #dashboard{
+      display:none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="box" id="loginBox">
+  <h3>School Login</h3>
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <p id="msg"></p>
+</div>
+
+<div class="box" id="dashboard">
+  <h3>Dashboard</h3>
+  <p id="status"></p>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+  // 🔴 APNA FIREBASE CONFIG YAHA PASTE KARO
+  firebase.initializeApp({
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID"
+  });
+
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  function login(){
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    auth.signInWithEmailAndPassword(email,password)
+    .catch(err=>{
+      document.getElementById("msg").innerText = err.message;
+    });
+  }
+
+  auth.onAuthStateChanged(user=>{
+    if(!user) return;
+
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("dashboard").style.display="block";
+
+    db.collection("users").doc(user.uid).get().then(doc=>{
+      if(!doc.exists){
+        document.getElementById("status").innerText =
+          "No user record found";
+        return;
+      }
+
+      const data = doc.data();
+      const today = new Date();
+      const expiry = new Date(data.expiryDate);
+
+      if(today > expiry){
+        document.getElementById("status").innerText =
+          "❌ Trial Expired – Please Renew";
+      }else{
+        document.getElementById("status").innerText =
+          "✅ Welcome (" + data.role + ") Trial Active";
+      }
+    });
+  });
+
+  function logout(){
+    auth.signOut();
+    location.reload();
+  }
+</script>
+
+</body>
+</html>
