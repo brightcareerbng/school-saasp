@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Firebase Auth + Firestore Test</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:Arial;background:#f4f6f9;padding:20px}
+.box{max-width:400px;margin:auto;background:#fff;padding:20px;border-radius:8px}
+input,button{width:100%;padding:10px;margin-top:10px;font-size:16px}
+button{background:#0b5ed7;color:#fff;border:none}
+#msg{margin-top:15px;font-weight:bold}
+</style>
+</head>
+<body>
+
+<div class="box">
+  <h3>Login Test</h3>
+  <input id="email" type="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <div id="msg"></div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyA6zbRTjmD5dj8sOBVNv_a7RV0ZtvD9L8Y",
+  authDomain: "school-sass-e8333.firebaseapp.com",
+  projectId: "school-sass-e8333"
+});
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+function login(){
+  msg.innerText = "Logging in...";
+  auth.signInWithEmailAndPassword(email.value, password.value)
+    .then(()=>{
+      // Firestore TEST read
+      db.collection("test").doc("demo").get()
+        .then(doc=>{
+          if(doc.exists){
+            msg.innerText = "✅ Firestore OK: " + doc.data().message;
+          }else{
+            msg.innerText = "❌ Firestore document not found";
+          }
+        })
+        .catch(err=>{
+          msg.innerText = "❌ Firestore error: " + err.message;
+        });
+    })
+    .catch(e=>{
+      msg.innerText = "❌ " + e.message;
+    });
+}
+</script>
+
+</body>
+</html>
